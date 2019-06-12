@@ -28,14 +28,48 @@ SELECT a.name, b.name FROM some_table a JOIN another_table b ON a.some_id = b.so
 <br />
 
 1. Get all invoices where the `unit_price` on the `invoice_line` is greater than $0.99.
+SELECT * FROM invoice a
+JOIN invoice_line b ON a.invoice_id = b.invoice_id
+WHERE b.unit_price > .99;
+
 2. Get the `invoice_date`, customer `first_name` and `last_name`, and `total` from all invoices.
+SELECT a.invoice_date, b.first_name, b.last_name, a.total 
+FROM invoice a JOIN customer b ON a.customer_id = b.customer_id;
+
 3. Get the customer `first_name` and `last_name` and the support rep's `first_name` and `last_name` from all customers. 
     * Support reps are on the employee table.
+SELECT c.first_name, c.last_name, e.first_name, e.last_name 
+FROM customer c JOIN employee e
+ON c.support_rep_id = e.employee_id;
+
 4. Get the album `title` and the artist `name` from all albums.
+SELECT al.title, ar.name
+FROM album al JOIN artist ar
+ON al.artist_id = ar.artist_id;
+
 5. Get all playlist_track track_ids where the playlist `name` is Music.
+SELECT p.track_id FROM playlist_track p
+JOIN playlist pl ON pl.playlist_id = p.playlist_id
+WHERE pl.name = 'Music';
+
 6. Get all track `name`s for `playlist_id` 5.
+SELECT tr.name FROM track tr
+JOIN playlist_track pt ON tr.track_id = pt.track_id
+WHERE pt.playlist_id = 5;
+
 7. Get all track `name`s and the playlist `name` that they're on ( 2 joins ).
+SELECT tr.name, pl.name 
+FROM track tr 
+JOIN playlist_track pt ON tr.track_id = pt.track_id
+
+JOIN playlist pl ON pt.playlist_id = pl.playlist_id;
+
 8. Get all track `name`s and album `title`s that are the genre `Alternative & Punk` ( 2 joins ).
+SELECT tr.name, al.title
+FROM album al
+JOIN track tr ON al.album_id = tr.album_id
+JOIN genre ge ON tr.genre_id = ge.genre_id
+WHERE ge.name = 'Alternative & Punk';
 
 ### Solution
 
@@ -178,11 +212,41 @@ SELECT name, Email FROM Athlete WHERE AthleteId IN ( SELECT PersonId FROM PieEat
 <br />
 
 1. Get all invoices where the `unit_price` on the `invoice_line` is greater than $0.99.
+SELECT * FROM invoice
+WHERE invoice_id 
+IN (SELECT invoice_id FROM invoice_line WHERE unit_price > .99);
+
 2. Get all playlist tracks where the playlist name is Music.
+SELECT * 
+FROM playlist_track 
+WHERE playlist_id 
+IN(SELECT playlist_id FROM playlist WHERE name = 'Music');
+
 3. Get all track names for `playlist_id` 5.
+SELECT name
+FROM track
+WHERE track_id 
+IN (SELECT track_id FROM playlist_track WHERE playlist_id = 5);
+
 4. Get all tracks where the `genre` is Comedy.
+SELECT *
+FROM track
+WHERE genre_id 
+IN (SELECT genre_id FROM genre WHERE name = 'Comedy');
+
 5. Get all tracks where the `album` is Fireball.
+SELECT *
+FROM track
+WHERE genre_id 
+IN (SELECT genre_id FROM genre WHERE name = 'comedy');
+
 6. Get all tracks for the artist Queen ( 2 nested subqueries ).
+SELECT *
+FROM track
+WHERE album_id 
+IN (SELECT album_id FROM album WHERE artist_id 
+    IN(SELECT artist_id FROM artist WHERE name = 'Queen'));
+
 
 ### Solution
 
@@ -289,11 +353,33 @@ UPDATE athletes SET sport = 'Picklball' WHERE sport = 'pockleball';
 <br />
 
 1. Find all customers with fax numbers and set those numbers to `null`.
+UPDATE customer
+SET fax = null 
+WHERE fax is not null;
+
 2. Find all customers with no company (null) and set their company to `"Self"`.
+UPDATE customer
+SET company = 'Self' 
+WHERE company IS null;
+
 3. Find the customer `Julia Barnett` and change her last name to `Thompson`.
+UPDATE customer
+SET last_name = 'Thompson' 
+WHERE first_name = 'Julia' AND last_name = 'Barnett';
+
 4. Find the customer with this email `luisrojas@yahoo.cl` and change his support rep to `4`.
+UPDATE customer
+SET support_rep_id = 4 
+WHERE email = `luisrojas@yahoo.cl`;
+
 5. Find all tracks that are the genre `Metal` and have no composer. Set the composer to `"The darkness around us"`.
+UPDATE track
+SET composer = 'The darkness around us'
+WHERE genre_id = (SELECT genre_id FROM genre WHERE name = 'Metal' )
+AND composer IS NULL;
+
 6. Refresh your page to remove all database changes.
+## Consider it done, my lord!!!!!!!!!!!!!!
 
 ### Solution
 
@@ -383,8 +469,23 @@ GROUP BY [column];
 <br />
 
 1. Find a count of how many tracks there are per genre. Display the genre name with the count.
+SELECT COUNT(*), ge.name
+FROM track tr
+JOIN genre ge ON tr.genre_id = ge.genre_id
+GROUP BY ge.name;
+
 2. Find a count of how many tracks are the `"Pop"` genre and how many tracks are the `"Rock"` genre.
+SELECT COUNT(*), ge.name
+FROM track tr
+JOIN genre ge ON tr.genre_id = ge.genre_id
+WHERE ge.name = 'Pop' OR ge.name = 'Rock'
+GROUP BY ge.name;
+
 3. Find a list of all artists and how many albums they have.
+select ar.name , count(*)
+from album al
+JOIN artist ar ON al.artist_id = ar.artist_id
+group by ar.name;
 
 ### Solution
 
@@ -450,8 +551,16 @@ FROM [table];
 <br />
 
 1. From the `track` table find a unique list of all `composer`s.
+SELECT DISTINCT composer 
+FROM track;
+
 2. From the `invoice` table find a unique list of all `billing_postal_code`s.
+SELECT DISTINCT  billing_postal_code
+FROM invoice;
+
 3. From the `customer` table find a unique list of all `company`s.
+SELECT DISTINCT company 
+FROM customer;
 
 <details>
 
@@ -534,9 +643,15 @@ DELETE FROM [table] WHERE [condition]
 <br />
 
 1. Copy, paste, and run the SQL code from the summary.
+##CONSIDER IT DONE, MY LORD!!!
 2. Delete all `'bronze'` entries from the table.
+DELETE FROM practice_delete WHERE type = 'bronze';
+
 3. Delete all `'silver'` entries from the table.
+DELETE FROM practice_delete WHERE type = 'silver';
+
 4. Delete all entries whose value is equal to `150`.
+DELETE FROM practice_delete WHERE value = 150;
 
 ### Solution
 
@@ -597,17 +712,70 @@ Let's simulate an e-commerce site. We're going to need users, products, and orde
 ### Instructions
 
 * Create 3 tables following the criteria in the summary.
+CREATE TABLE users ( id SERIAL PRIMARY KEY, name TEXT, email TEXT);
+INSERT INTO users ( name, email ) VALUES ('Jordan', 'jordan@gmail.com');
+INSERT INTO users ( name, email ) VALUES ('David', 'david@gmail.com');
+INSERT INTO users ( name, email) VALUES ('Willis', 'willis@gmail.com');
+
+CREATE TABLE products ( id SERIAL PRIMARY KEY, name TEXT, price FLOAT);
+INSERT INTO products ( name, price ) VALUES ('pants', 11.99);
+INSERT INTO products ( name, price ) VALUES ('shirt', 12.99);
+INSERT INTO products ( name, price) VALUES ('platypus', 1000000.99)
+
+CREATE TABLE orders ( id SERIAL PRIMARY KEY, amount INTEGER, ref INTEGER);
+INSERT INTO orders ( amount, ref) VALUES (952, 1);
+INSERT INTO orders ( amount, ref) VALUES (13, 2);
+INSERT INTO orders ( amount, ref) VALUES (1, 3);
+
 * Add some data to fill up each table.
   * At least 3 users, 3 products, 3 orders.
 * Run queries against your data.
   * Get all products for the first order.
+  SELECT o.id, pr.name
+  FROM products pr
+  JOIN orders o ON o.ref = pr.id
+  WHERE o.id = 1;
+
   * Get all orders.
+  SELECT o.id, pr.name, o.amount
+  FROM products pr
+  JOIN orders o ON o.ref = pr.id;
+
   * Get the total cost of an order ( sum the price of all products on an order ).
+  SELECT o.id, (o.amount * pr.price)
+  FROM products pr
+  JOIN orders o ON o.ref = pr.id
+  WHERE o.id = 3;
+
 * Add a foreign key reference from orders to users.
+ ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id);
 * Update the orders table to link a user to each order.
+UPDATE orders
+SET user_id = 1
+WHERE id = 1;
+
+UPDATE orders
+SET user_id = 2
+WHERE id = 2;
+
+UPDATE orders
+SET user_id = 3
+WHERE id = 3;
 * Run queries against your data.
   * Get all orders for a user.
+SELECT u.name, p.name, o.amount
+FROM orders o 
+JOIN users u ON o.user_id = u.id
+JOIN products p ON p.id = o.ref
+WHERE u.name = 'Jordan';
+
   * Get how many orders each user has.
+SELECT u.name, p.name, o.amount
+FROM orders o 
+JOIN users u ON o.user_id = u.id
+JOIN products p ON p.id = o.ref;
+
+##each user only made one order...
 
 ### Black Diamond
 
